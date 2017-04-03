@@ -13,20 +13,20 @@
 var EXPONENT_2 = "\u00B2";
 var SQUARE_ROOT = "\u221A";
 
-var questions = [	{question:SQUARE_ROOT+"64",answer:8,options:[2,3,1]},
-					{question:SQUARE_ROOT+"81",answer:9,options:[2,3,1]},
-					{question:SQUARE_ROOT+"25",answer:5,options:[2,3,1]},
-					{question:"9"+EXPONENT_2,answer:81,options:[2,3,1]},
-					{question:SQUARE_ROOT+"16",answer:4,options:[2,3,1]},
-					{question:SQUARE_ROOT+"9",answer:3,options:[2,3,1]},
-					{question:SQUARE_ROOT+"49",answer:7,options:[2,3,1]},
-					{question:"10"+EXPONENT_2,answer:100,options:[2,3,1]},
-					{question:"2"+EXPONENT_2,answer:4,options:[2,3,1]},
-					{question:"6"+EXPONENT_2,answer:36,options:[2,3,1]},
-					{question:"11"+EXPONENT_2,answer:121,options:[2,3,1]},
-					{question:SQUARE_ROOT+"36",answer:6,options:[2,3,1]},
-					{question:"5"+EXPONENT_2,answer:25,options:[2,3,1]},
-					{question:SQUARE_ROOT+"4",answer:2,options:[2,3,1]}
+var questions = [	{question:SQUARE_ROOT+"64",answer:8,options:[2,3,1,8]},
+					{question:SQUARE_ROOT+"81",answer:9,options:[2,9,3,1]},
+					{question:SQUARE_ROOT+"25",answer:5,options:[2,5,3,1]},
+					{question:"9"+EXPONENT_2,answer:81,options:[81,2,3,1]},
+					{question:SQUARE_ROOT+"16",answer:4,options:[4,2,3,1]},
+					{question:SQUARE_ROOT+"9",answer:3,options:[2,3,1,3]},
+					{question:SQUARE_ROOT+"49",answer:7,options:[2,3,7,1]},
+					{question:"10"+EXPONENT_2,answer:100,options:[2,3,100,1]},
+					{question:"2"+EXPONENT_2,answer:4,options:[2,3,1,4]},
+					{question:"6"+EXPONENT_2,answer:36,options:[2,36,3,1]},
+					{question:"11"+EXPONENT_2,answer:121,options:[2,3,1,121]},
+					{question:SQUARE_ROOT+"36",answer:6,options:[6,2,3,1]},
+					{question:"5"+EXPONENT_2,answer:25,options:[2,25,3,1]},
+					{question:SQUARE_ROOT+"4",answer:2,options:[2,4,3,1]}
 				 ];
 
 
@@ -38,8 +38,10 @@ var STAGE_WIDTH;
 var STAGE_HEIGHT;
 
 var gameStarted = false;
+var questionCounter;
 var health;
 var ENEMY_SPEED = 2;
+var DEFAULT_ENEMY_SPEED = 2;
 
 // text
 var healthText;
@@ -88,6 +90,7 @@ function init() {
 	startPreload();
 
 	health = 100; // reset game health
+	questionCounter = 0;
 
 	stage.update(); 
 }
@@ -98,7 +101,25 @@ function init() {
  function tick(event) {
  	if (gameStarted) {
 
+ 		if (enemy1.y > STAGE_HEIGHT) { // then spawn new enemies and switch the question
 
+ 			updateHealth(-20);
+ 			ENEMY_SPEED = DEFAULT_ENEMY_SPEED;
+
+ 			var temp = 0;
+ 			for (var e of [enemy1, enemy2, enemy3, enemy4]) {
+ 				e.y = -e.getBounds().height; // move back to top
+ 			}
+
+ 			questionCounter++;
+ 			questionText.text = questions[questionCounter].question;
+
+ 			// update enemy labels
+ 			enemyText1.text = questions[questionCounter].options[0];
+ 			enemyText2.text = questions[questionCounter].options[1];
+ 			enemyText3.text = questions[questionCounter].options[2];
+ 			enemyText4.text = questions[questionCounter].options[3];
+ 		}
 
 
 
@@ -286,10 +307,10 @@ function setupEnemies() {
 
 
 	// listeners
-	enemy1.on("click", function() { handleClick(1); });
-	enemy2.on("click", function() { handleClick(2); });
-	enemy3.on("click", function() { handleClick(3); });
-	enemy4.on("click", function() { handleClick(4); });
+	enemy1.on("click", function() { handleClick(0); });
+	enemy2.on("click", function() { handleClick(1); });
+	enemy3.on("click", function() { handleClick(2); });
+	enemy4.on("click", function() { handleClick(3); });
 
 	// enemy text
 	enemyText1 = new createjs.Text("[]", "20px Lato", "green");
@@ -341,11 +362,11 @@ function handleClick(id) {
 
 	// move to correct firing position
 	createjs.Tween.get(playerImage)
-		.to({x:enemy4.x}, 500);
+		.to({x:getEnemyFromID(getCorrectEnemyID()).x}, 500);
 
-	if (id == 4) { // correct
+	if (questions[questionCounter].options[id] == questions[questionCounter].answer) { // correct
 
-		setTimeout(fireMissile, 500);
+		setTimeout(function() { fireMissile(id); }, 500);
 
 
 	} else { // incorrect
@@ -356,16 +377,48 @@ function handleClick(id) {
 }
 
 /*
+ * Returns the enemy associated with an ID (because I was too lazy to make an array)
+ */
+function getEnemyFromID(id) {
+
+	if (id == 0) {
+		return enemy1;
+	} else if (id == 1) {
+		return enemy2;
+	} else if (id == 2) {
+		return enemy3;
+	} else if (id == 3) {
+		return enemy4;
+	} else {
+		return enemy4; // just in case
+	}
+
+}
+
+/*
+ * Gets the ID of the correct enemy
+ */
+function getCorrectEnemyID() {
+	for (var i = 0; i < 4; i++) {
+		if (questions[questionCounter].options[i] == questions[questionCounter].answer) {
+			return i;
+		}
+	}
+}
+
+/*
  * Fire a missile and destroy the enemy ships.
  */
-function fireMissile() {
+function fireMissile(id) {
 	// initial missile position
 	missileImage.x = playerImage.x;
 	missileImage.y = playerImage.y;
 	stage.addChild(missileImage);
 
+	var correctEnemy = getEnemyFromID(id);
+
 	createjs.Tween.get(missileImage)
-		.to({y: enemy4.y}, 800)
+		.to({y: correctEnemy.y}, 800)
 		.call(function() {
 			stage.removeChild(missileImage);
 		});
@@ -377,11 +430,8 @@ function fireMissile() {
 function malfunction() {
 	sendAlertMessage("Missile malfunction!");
 
-	// tween enemies
-	for (var e of [enemy1, enemy2, enemy3, enemy4]) {
-		createjs.Tween.get(e).to({y:playerImage.y+200}, 3000);
-	}
-	setTimeout(function() { updateHealth(-20); }, 2500);
+
+	ENEMY_SPEED = 6;
 }
 
 /*

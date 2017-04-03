@@ -39,7 +39,16 @@ var STAGE_HEIGHT;
 
 var gameStarted = false;
 var health;
+var ENEMY_SPEED = 2;
+
+// text
 var healthText;
+var questionText;
+var enemyText1;
+var enemyText2;
+var enemyText3;
+var enemyText4;
+var alertText;
 
 // bitmap images
 var playerImage;
@@ -47,6 +56,12 @@ var enemyImage;
 var sidebarImage;
 var starsImage;
 var starsImage2;
+var enemy1;
+var enemy2;
+var enemy3;
+var enemy4;
+var missileImage;
+
 
 /*
  * Handles initialization of game components
@@ -82,9 +97,13 @@ function init() {
  */
  function tick(event) {
  	if (gameStarted) {
+
+
+
+
+
  		loopStarsBackground(); // update scrolling background
-
-
+ 		updateEnemies();
  	}
 
  	stage.update(event);
@@ -116,6 +135,10 @@ function setupManifest() {
 	{
 		src: "images/stars.png",
 		id: "stars"
+	},
+	{
+		src: "images/missile.png",
+		id: "missile"
 	}
 	];
 }
@@ -144,6 +167,8 @@ function handleFileLoad(event) {
    	} else if (event.item.id == "stars") {
    		starsImage = new createjs.Bitmap(event.result);
    		starsImage2 = new createjs.Bitmap(event.result);
+   	} else if (event.item.id == "missile") {
+   		missileImage = new createjs.Bitmap(event.result);
    	}
 }
 
@@ -221,6 +246,17 @@ function initGraphics() {
 	// left side bar
 	stage.addChild(sidebarImage);
 
+	// question text
+	questionText = new createjs.Text("[Question]", "20px Lato", "white");
+	questionText.x = sidebarImage.getBounds().width/2 - questionText.getMeasuredWidth()/2;
+	questionText.y = 50;
+	stage.addChild(questionText);
+
+	// alert text
+	alertText = new createjs.Text("", "20px Lato", "red");
+	alertText.x = playerImage.x;
+	alertText.y = playerImage.y - alertText.getMeasuredHeight() - 5;
+
 	// scrolling stars
 	starsImage.x = sidebarImage.getBounds().width;
 	starsImage2.x = sidebarImage.getBounds().width;
@@ -228,38 +264,154 @@ function initGraphics() {
 	stage.addChild(starsImage);
 	stage.addChild(starsImage2);
 
+	setupPlayer();
+	setupEnemies();
+
 	gameStarted = true; // once graphics are loaded, game is started
 }
 
 /*
  * Setup enemies.
  */
- function setupEnemies() {
- 	// TODO
- }
+function setupEnemies() {
+ 	enemy1 = Object.create(enemyImage);
+	enemy2 = Object.create(enemyImage); 
+	enemy3 = Object.create(enemyImage);
+	enemy4 = Object.create(enemyImage);
+
+	enemy1.x = sidebarImage.getBounds().width + 40;
+	enemy2.x = enemy1.x + enemyImage.getBounds().width + 40;
+	enemy3.x = enemy2.x + enemyImage.getBounds().width + 40;
+	enemy4.x = enemy3.x + enemyImage.getBounds().width + 40;
+
+
+	// listeners
+	enemy1.on("click", function() { handleClick(1); });
+	enemy2.on("click", function() { handleClick(2); });
+	enemy3.on("click", function() { handleClick(3); });
+	enemy4.on("click", function() { handleClick(4); });
+
+	// enemy text
+	enemyText1 = new createjs.Text("[]", "20px Lato", "green");
+	enemyText2 = new createjs.Text("[]", "20px Lato", "green");
+	enemyText3 = new createjs.Text("[]", "20px Lato", "green");
+	enemyText4 = new createjs.Text("[]", "20px Lato", "green");
+	enemyText1.x = enemy1.x;
+	enemyText2.x = enemy2.x;
+	enemyText3.x = enemy3.x;
+	enemyText4.x = enemy4.x;
+	enemyText1.y = enemy1.y + enemy1.getBounds().height;
+	enemyText2.y = enemy1.y + enemy2.getBounds().height;
+	enemyText3.y = enemy1.y + enemy3.getBounds().height;
+	enemyText4.y = enemy1.y + enemy4.getBounds().height;
+
+
+	stage.addChild(enemy1);
+	stage.addChild(enemy2);
+	stage.addChild(enemy3);
+	stage.addChild(enemy4);
+	stage.addChild(enemyText1);
+	stage.addChild(enemyText2);
+	stage.addChild(enemyText3);
+	stage.addChild(enemyText4);
+
+
+
+	// temp
+	enemyText1.text = questions[0].options[0];
+	enemyText2.text = questions[0].options[1];
+	enemyText3.text = questions[0].options[2];
+	enemyText4.text = questions[0].answer;
+	questionText.text = questions[0].question;
+}
 
  /*
-  * Plays a sound if the game is not muted.
+  * Setup player spaceship.
   */
- function playSound(id) {
- 	if (!mute) {
- 		createjs.Sound.play(id);
- 	}
- }
+function setupPlayer() {
+	playerImage.x = (STAGE_WIDTH - sidebarImage.getBounds().width)/2 + sidebarImage.getBounds().width - playerImage.getBounds().width/2;
+	playerImage.y = STAGE_HEIGHT - playerImage.getBounds().height - 10;
+	stage.addChild(playerImage);
+}
 
- /*
-  * Sends an alert to the user.
-  */
-  function sendAlertMessage(message) {
+/*
+* An enemy ship was clicked.
+*/
+function handleClick(id) {
 
-  }
+	// move to correct firing position
+	createjs.Tween.get(playerImage)
+		.to({x:enemy4.x}, 500);
+
+	if (id == 4) { // correct
+
+		setTimeout(fireMissile, 500);
+
+
+	} else { // incorrect
+
+		setTimeout(malfunction, 500);
+
+	}
+}
+
+/*
+ * Fire a missile and destroy the enemy ships.
+ */
+function fireMissile() {
+	// initial missile position
+	missileImage.x = playerImage.x;
+	missileImage.y = playerImage.y;
+	stage.addChild(missileImage);
+
+	createjs.Tween.get(missileImage)
+		.to({y: enemy4.y}, 800)
+		.call(function() {
+			stage.removeChild(missileImage);
+		});
+}
+
+/*
+ * Missile malfunctions and player ship is damaged.
+ */
+function malfunction() {
+	sendAlertMessage("Missile malfunction!");
+
+	// tween enemies
+	for (var e of [enemy1, enemy2, enemy3, enemy4]) {
+		createjs.Tween.get(e).to({y:playerImage.y+200}, 3000);
+	}
+	setTimeout(function() { updateHealth(-20); }, 2500);
+}
+
+/*
+* Plays a sound if the game is not muted.
+*/
+function playSound(id) {
+	if (!mute) {
+		createjs.Sound.play(id);
+	}
+}
+
+/*
+* Sends an alert to the user.
+*/
+function sendAlertMessage(message) {
+	alertText.text = message;
+	alertText.x = playerImage.x;
+	alertText.y = playerImage.y - alertText.getMeasuredHeight() - 5;
+	stage.addChild(alertText);
+	setTimeout(function() {
+		stage.removeChild(alertText);
+	}, 2000);
+}
 
  /*
  * Updates game health (including displayed text)
  */
-function updatehealth(amount) {
+function updateHealth(amount) {
 	health += amount;
-	healthText.text = "health: " + health;
+	healthText.text = "Health: " + health + "%";
 	healthText.x = STAGE_WIDTH - healthText.getMeasuredWidth() - 10;
 }
 
@@ -268,14 +420,31 @@ function updatehealth(amount) {
  * Scrolls the stars down, and loops them.
  */
 function loopStarsBackground() {
- 	starsImage.y++;
-	starsImage2.y++;
+ 	starsImage.y+=0.5;
+	starsImage2.y+0.5;
 	if (starsImage.y > -5) {
 		starsImage2.y = starsImage.y - starsImage2.getBounds().height;
 	} 
 	if (starsImage2.y > -5) {
 		starsImage.y = starsImage2.y - starsImage.getBounds().height;
 	}
+}
+
+/*
+ * Called by update(tick) function.
+ * Updates the position of the enemy ships.
+ */
+function updateEnemies() {
+
+	for (var e of [enemy1, enemy2, enemy3, enemy4]) {
+		e.y += ENEMY_SPEED;
+	}
+
+	// update the texts
+	enemyText1.y = enemy1.y + enemyImage.getBounds().height;
+	enemyText2.y = enemy2.y + enemyImage.getBounds().height;
+	enemyText3.y = enemy3.y + enemyImage.getBounds().height;
+	enemyText4.y = enemy4.y + enemyImage.getBounds().height;
 }
 
 /*

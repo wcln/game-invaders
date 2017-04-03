@@ -42,6 +42,8 @@ var questionCounter;
 var health;
 var ENEMY_SPEED = 2;
 var DEFAULT_ENEMY_SPEED = 2;
+var PLAYER_MOVE_SPEED = 6;
+var MISSILE_SPEED = 8;
 
 // text
 var healthText;
@@ -63,6 +65,18 @@ var enemy2;
 var enemy3;
 var enemy4;
 var missileImage;
+
+// key code constants
+var KEYCODE_LEFT = 37,
+    KEYCODE_RIGHT = 39,
+    KEYCODE_UP = 38,
+    KEYCODE_DOWN = 40,
+    KEYCODE_SPACE = 32;
+
+// used by keyboard listener
+var leftArrow, rightArrow, upArrow, downArrow = false;
+
+var updateMissile = false;
 
 
 /*
@@ -91,6 +105,10 @@ function init() {
 
 	health = 100; // reset game health
 	questionCounter = 0;
+
+	// keyboard handlers
+	window.onkeyup = keyUpHandler;
+	window.onkeydown = keyDownHandler;
 
 	stage.update(); 
 }
@@ -121,10 +139,26 @@ function init() {
  			enemyText4.text = questions[questionCounter].options[3];
  		}
 
+ 		if (updateMissile) { // if a missile has been fired, update it
+
+ 			missileImage.y -= MISSILE_SPEED; // move missile up
+
+ 			for (var e of [enemy1, enemy2, enemy3, enemy4]) {
+ 				var intersection = ndgmr.checkRectCollision(missileImage, e);
+
+ 				if (intersection != null) { // a collision occurred
+ 					updateMissile = false;
+ 					var enemyHitBitmap = intersection; // get the enemy that was hit
+ 					enemyHit(enemyHitBitmap);
+ 				}
+ 			}
+ 		}
+
 
 
  		loopStarsBackground(); // update scrolling background
  		updateEnemies();
+ 		move(); // update player space ship
  	}
 
  	stage.update(event);
@@ -338,7 +372,7 @@ function setupEnemies() {
 
 
 
-	// temp
+	// initial questions setup
 	enemyText1.text = questions[0].options[0];
 	enemyText2.text = questions[0].options[1];
 	enemyText3.text = questions[0].options[2];
@@ -526,4 +560,74 @@ function shuffle(a) {
         a[i - 1] = a[j];
         a[j] = x;
     }
+}
+
+/*
+ * Key down handler for arrow keys and space bar.
+ */
+function keyDownHandler(e) {
+	switch (e.keyCode) {
+		case KEYCODE_LEFT: leftArrow = true; break;
+		case KEYCODE_RIGHT: rightArrow = true; break;
+		case KEYCODE_SPACE: shoot(); break;
+	}
+}
+
+/*
+ * Key up handler for arrow keys and space bar.
+ */
+function keyUpHandler(e) {
+	switch (e.keyCode) {
+		case KEYCODE_LEFT: leftArrow = false; break;
+		case KEYCODE_RIGHT: rightArrow = false; break;
+		case KEYCODE_SPACE: /* do nothing */ break;
+	}
+}
+
+/*
+ * Move the spaceship to the left or right.
+ */
+function move() {
+	if (leftArrow) {
+		if (playerImage.x > sidebarImage.getBounds().width) {
+			playerImage.x -= PLAYER_MOVE_SPEED;
+		}
+	}
+	if (rightArrow) {
+		if (playerImage.x < STAGE_WIDTH) {
+			playerImage.x += PLAYER_MOVE_SPEED;
+		}
+	}
+}
+
+/*
+ * Shoot a projectile.
+ */
+function shoot() {
+	// initial missile position
+	missileImage.x = playerImage.x;
+	missileImage.y = playerImage.y;
+	stage.addChild(missileImage);
+
+	updateMissile = true;
+}
+
+/*
+ * An enemy has been hit by the missile.
+ */
+function enemyHit(e) {
+	switch (e.x) {
+		case enemy1.x: 
+			alert('enemy1 hit');
+			break;
+		case enemy2.x: 
+			alert('enemy2 hit');
+			break;
+		case enemy3.x: 
+			alert('enemy3 hit');
+			break;
+		case enemy4.x: 
+			alert('enemy4 hit');
+			break;
+	}
 }

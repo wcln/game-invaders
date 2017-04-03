@@ -38,8 +38,15 @@ var STAGE_WIDTH;
 var STAGE_HEIGHT;
 
 var gameStarted = false;
-var score;
-var scoreText;
+var health;
+var healthText;
+
+// bitmap images
+var playerImage;
+var enemyImage;
+var sidebarImage;
+var starsImage;
+var starsImage2;
 
 /*
  * Handles initialization of game components
@@ -56,7 +63,7 @@ function init() {
 	stage.enableMouseOver(); // Default, checks the mouse 20 times/second for hovering cursor changes
 
 	// add loading progress text (used by preload)
-	progressText = new createjs.Text("", "20px Lato", "black");
+	progressText = new createjs.Text("", "20px Lato", "white");
 	progressText.x = STAGE_WIDTH/2 - progressText.getMeasuredWidth() / 2;
 	progressText.y = 20;
 	//stage.addChild(progressText);
@@ -65,7 +72,7 @@ function init() {
 	setupManifest(); // preloadJS
 	startPreload();
 
-	score = 0; // reset game score
+	health = 100; // reset game health
 
 	stage.update(); 
 }
@@ -75,7 +82,9 @@ function init() {
  */
  function tick(event) {
  	if (gameStarted) {
- 		// do stuff
+ 		loopStarsBackground(); // update scrolling background
+
+
  	}
 
  	stage.update(event);
@@ -91,6 +100,22 @@ function setupManifest() {
 	{
 		src: "sounds/click.mp3",
 		id: "click"
+	},
+	{
+		src: "images/player.png",
+		id: "player"
+	},
+	{
+		src: "images/enemy.png",
+		id: "enemy"
+	},
+	{
+		src: "images/sidebar.png",
+		id: "sidebar"
+	},
+	{
+		src: "images/stars.png",
+		id: "stars"
 	}
 	];
 }
@@ -110,7 +135,16 @@ function handleFileLoad(event) {
     // create bitmaps of images
    	if (event.item.id == "logo") {
    		//planeImages[0] = new createjs.Bitmap(event.result);
-   	} 
+   	} else if (event.item.id == "player") {
+   		playerImage = new createjs.Bitmap(event.result);
+   	} else if (event.item.id == "enemy") {
+   		enemyImage = new createjs.Bitmap(event.result);
+   	} else if (event.item.id == "sidebar") {
+   		sidebarImage = new createjs.Bitmap(event.result);
+   	} else if (event.item.id == "stars") {
+   		starsImage = new createjs.Bitmap(event.result);
+   		starsImage2 = new createjs.Bitmap(event.result);
+   	}
 }
 
 function loadError(evt) {
@@ -130,7 +164,7 @@ function loadComplete(event) {
     console.log("Finished Loading Assets");
 
     // display start screen
-    startText = new createjs.Text("Click To Start", "50px Lato", "black");
+    startText = new createjs.Text("Click To Start", "50px Lato", "white");
     startText.x = STAGE_WIDTH/2 - startText.getMeasuredWidth()/2;
     startText.y = STAGE_HEIGHT/2 - startText.getMeasuredHeight()/2;
     stage.addChild(startText);
@@ -162,7 +196,7 @@ function startGame(event) {
  */
 function endGame() {
 	gameStarted = false;
-	var playAgainText = new createjs.Text("Click to play again", "40px Lato", "black");
+	var playAgainText = new createjs.Text("Click to play again", "40px Lato", "white");
 	playAgainText.x = STAGE_WIDTH/2 - playAgainText.getMeasuredWidth()/2;
     playAgainText.y = STAGE_HEIGHT/2 - playAgainText.getMeasuredHeight()/2 + 70;
     stage.addChild(playAgainText);
@@ -178,13 +212,21 @@ function endGame() {
  */
 function initGraphics() {
 
-	// score text
-	scoreText = new createjs.Text("Score: " + score, "20px Lato", "#000000");
-	scoreText.x = STAGE_WIDTH - scoreText.getMeasuredWidth() - 10;
-	scoreText.y = 10;
-	stage.addChild(scoreText);
+	// health text
+	healthText = new createjs.Text("Health: " + health + "%", "20px Lato", "green");
+	healthText.x = STAGE_WIDTH - healthText.getMeasuredWidth() - 10;
+	healthText.y = 10;
+	stage.addChild(healthText);
 
+	// left side bar
+	stage.addChild(sidebarImage);
 
+	// scrolling stars
+	starsImage.x = sidebarImage.getBounds().width;
+	starsImage2.x = sidebarImage.getBounds().width;
+	starsImage2.y = sidebarImage.getBounds().height;
+	stage.addChild(starsImage);
+	stage.addChild(starsImage2);
 
 	gameStarted = true; // once graphics are loaded, game is started
 }
@@ -213,12 +255,27 @@ function initGraphics() {
   }
 
  /*
- * Updates game score (including displayed text)
+ * Updates game health (including displayed text)
  */
-function updateScore(amount) {
-	score += amount;
-	scoreText.text = "Score: " + score;
-	scoreText.x = STAGE_WIDTH - scoreText.getMeasuredWidth() - 10;
+function updatehealth(amount) {
+	health += amount;
+	healthText.text = "health: " + health;
+	healthText.x = STAGE_WIDTH - healthText.getMeasuredWidth() - 10;
+}
+
+/*
+ * Called by update function. 
+ * Scrolls the stars down, and loops them.
+ */
+function loopStarsBackground() {
+ 	starsImage.y++;
+	starsImage2.y++;
+	if (starsImage.y > -5) {
+		starsImage2.y = starsImage.y - starsImage2.getBounds().height;
+	} 
+	if (starsImage2.y > -5) {
+		starsImage.y = starsImage2.y - starsImage.getBounds().height;
+	}
 }
 
 /*

@@ -39,14 +39,14 @@ var STAGE_HEIGHT;
 
 var gameStarted = false;
 var questionCounter;
-var health;
+var score;
 var ENEMY_SPEED = 2;
 var DEFAULT_ENEMY_SPEED = 2;
 var PLAYER_MOVE_SPEED = 6;
 var MISSILE_SPEED = 8;
 
 // text
-var healthText;
+var scoreText;
 var questionText;
 var enemyText1;
 var enemyText2;
@@ -65,6 +65,9 @@ var enemy2;
 var enemy3;
 var enemy4;
 var missileImage;
+
+// animations
+var explosionAnimation;
 
 // key code constants
 var KEYCODE_LEFT = 37,
@@ -103,7 +106,7 @@ function init() {
 	setupManifest(); // preloadJS
 	startPreload();
 
-	health = 100; // reset game health
+	score = 100; // reset game score
 	questionCounter = 0;
 
 	// keyboard handlers
@@ -119,9 +122,10 @@ function init() {
  function tick(event) {
  	if (gameStarted) {
 
- 		if (enemy1.y > STAGE_HEIGHT) { // then spawn new enemies and switch the question
+ 		if (enemy1.y > STAGE_HEIGHT && enemy2.y > STAGE_HEIGHT && enemy3.y > STAGE_HEIGHT && enemy4.y > STAGE_HEIGHT) { // then spawn new enemies and switch the question
 
- 			updateHealth(-20);
+ 			
+
  			ENEMY_SPEED = DEFAULT_ENEMY_SPEED;
 
  			var temp = 0;
@@ -137,20 +141,36 @@ function init() {
  			enemyText2.text = questions[questionCounter].options[1];
  			enemyText3.text = questions[questionCounter].options[2];
  			enemyText4.text = questions[questionCounter].options[3];
+ 			enemy1.name = enemyText1.text;
+			enemy2.name = enemyText2.text;
+			enemy3.name = enemyText3.text;
+			enemy4.name = enemyText4.text;
+
+			stage.addChild(enemy1);
+			stage.addChild(enemy2);
+			stage.addChild(enemy3);
+			stage.addChild(enemy4);
  		}
 
  		if (updateMissile) { // if a missile has been fired, update it
 
  			missileImage.y -= MISSILE_SPEED; // move missile up
 
- 			for (var e of [enemy1, enemy2, enemy3, enemy4]) {
- 				var intersection = ndgmr.checkRectCollision(missileImage, e);
+ 			var intersection = null;
+ 			var enemyHitBitmap = null;
 
- 				if (intersection != null) { // a collision occurred
- 					updateMissile = false;
- 					var enemyHitBitmap = intersection; // get the enemy that was hit
- 					enemyHit(enemyHitBitmap);
- 				}
+ 			intersection = ndgmr.checkRectCollision(missileImage, enemy1);
+ 			if (intersection != null) { enemyHitBitmap = enemy1; }
+ 			intersection = ndgmr.checkRectCollision(missileImage, enemy2);
+ 			if (intersection != null) { enemyHitBitmap = enemy2; }
+ 			intersection = ndgmr.checkRectCollision(missileImage, enemy3);
+ 			if (intersection != null) { enemyHitBitmap = enemy3; }
+ 			intersection = ndgmr.checkRectCollision(missileImage, enemy4);
+ 			if (intersection != null) { enemyHitBitmap = enemy4; }
+
+ 			if (enemyHitBitmap != null) {
+ 				enemyHit(enemyHitBitmap);
+ 				updateMissile = false;
  			}
  		}
 
@@ -292,11 +312,11 @@ function endGame() {
  */
 function initGraphics() {
 
-	// health text
-	healthText = new createjs.Text("Health: " + health + "%", "20px Lato", "green");
-	healthText.x = STAGE_WIDTH - healthText.getMeasuredWidth() - 10;
-	healthText.y = 10;
-	stage.addChild(healthText);
+	// score text
+	scoreText = new createjs.Text("score: " + score + "%", "20px Lato", "green");
+	scoreText.x = STAGE_WIDTH - scoreText.getMeasuredWidth() - 10;
+	scoreText.y = 10;
+	stage.addChild(scoreText);
 
 	// left side bar
 	stage.addChild(sidebarImage);
@@ -318,6 +338,16 @@ function initGraphics() {
 	starsImage2.y = sidebarImage.getBounds().height;
 	stage.addChild(starsImage);
 	stage.addChild(starsImage2);
+
+	// explosion animation
+	var explosionSpriteData = {
+		images: ["images/explosion.png"],
+		frames: {width:100, height:100, count:81, regX:0, regY:0, spacing:0, margin:0},
+		animations: {
+			explode: [0, 81, false]
+		}
+	};
+	explosionAnimation = new createjs.Sprite(new createjs.SpriteSheet(explosionSpriteData));
 
 	setupPlayer();
 	setupEnemies();
@@ -371,12 +401,15 @@ function setupEnemies() {
 	stage.addChild(enemyText4);
 
 
-
 	// initial questions setup
 	enemyText1.text = questions[0].options[0];
 	enemyText2.text = questions[0].options[1];
 	enemyText3.text = questions[0].options[2];
 	enemyText4.text = questions[0].answer;
+	enemy1.name = enemyText1.text;
+	enemy2.name = enemyText2.text;
+	enemy3.name = enemyText3.text;
+	enemy4.name = enemyText4.text;
 	questionText.text = questions[0].question;
 }
 
@@ -491,12 +524,12 @@ function sendAlertMessage(message) {
 }
 
  /*
- * Updates game health (including displayed text)
+ * Updates game score (including displayed text)
  */
-function updateHealth(amount) {
-	health += amount;
-	healthText.text = "Health: " + health + "%";
-	healthText.x = STAGE_WIDTH - healthText.getMeasuredWidth() - 10;
+function updateScore(amount) {
+	score += amount;
+	scoreText.text = "Score: " + score;
+	scoreText.x = STAGE_WIDTH - scoreText.getMeasuredWidth() - 10;
 }
 
 /*
@@ -521,7 +554,9 @@ function loopStarsBackground() {
 function updateEnemies() {
 
 	for (var e of [enemy1, enemy2, enemy3, enemy4]) {
-		e.y += ENEMY_SPEED;
+		if (e.y < STAGE_HEIGHT + 200) {
+			e.y += ENEMY_SPEED;
+		}
 	}
 
 	// update the texts
@@ -616,18 +651,63 @@ function shoot() {
  * An enemy has been hit by the missile.
  */
 function enemyHit(e) {
-	switch (e.x) {
-		case enemy1.x: 
-			alert('enemy1 hit');
-			break;
-		case enemy2.x: 
-			alert('enemy2 hit');
-			break;
-		case enemy3.x: 
-			alert('enemy3 hit');
-			break;
-		case enemy4.x: 
-			alert('enemy4 hit');
-			break;
+
+
+	stage.removeChild(missileImage); // remove the missile from stage
+
+	// explode the ship that was hit
+	explosionAnimation.x = e.x;
+	explosionAnimation.y = e.y;
+	explosionAnimation.scaleX = 1.3;
+	explosionAnimation.scaleY = 1.3;
+	stage.addChild(explosionAnimation);
+	explosionAnimation.gotoAndPlay("explode");
+	setTimeout(function removeHitShip() {
+		e.y = STAGE_HEIGHT + 300;
+		stage.removeChild(e);
+	}, 1000);
+
+	if (e.name == questions[questionCounter].answer) { // hit CORRECT enemy
+
+		setTimeout(function explodeOthers() {
+			// explode all other ships
+			for (var otherShip of [enemy1, enemy2, enemy3, enemy4]) {
+				if (otherShip.name != e.name) { // then it is not the ship we just exploded
+					var temp = Object.create(explosionAnimation);
+					temp.x = otherShip.x;
+					temp.y = otherShip.y;
+					temp.scaleX = 1;
+					temp.scaleY = 1;
+					stage.addChild(temp);
+					temp.gotoAndPlay("explode");
+				}
+			}
+		}, 500);
+
+		setTimeout(function removeOtherShips() {
+			enemy1.y = STAGE_HEIGHT + 300;
+			enemy2.y = STAGE_HEIGHT + 300;
+			enemy3.y = STAGE_HEIGHT + 300;
+			enemy4.y = STAGE_HEIGHT + 300;
+		}, 1000);
+
+
+
+		if (e.y < STAGE_HEIGHT/2) { // if leader is hit in first half of screen +100pts
+
+			updateScore(100);
+
+
+		} else { // if leader is hit in second half of screen +80pts
+
+			updateScore(80);
+
+		}
+
+
+	} else { // hit the WRONG enemy
+
+		updateScore(-20);
+
 	}
 }

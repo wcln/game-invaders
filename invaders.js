@@ -45,6 +45,8 @@ var DEFAULT_ENEMY_SPEED = 2;
 var PLAYER_MOVE_SPEED = 6;
 var MISSILE_SPEED = 8;
 var ENEMY_SHIP_SPACING = 75;
+var SLOWER_STARS_SPEED = 0.5;
+var FASTER_STARS_SPEED = 1;
 
 // text
 var scoreText;
@@ -61,6 +63,8 @@ var enemyImage;
 var sidebarImage;
 var starsImage;
 var starsImage2;
+var starsImageLayer2; // parallax star layers
+var starsImageLayer2_2;
 var enemy1;
 var enemy2;
 var enemy3;
@@ -138,6 +142,7 @@ function init() {
 
 
  		loopStarsBackground(); // update scrolling background
+ 		loopStarsBackgroundLayer2(); // parallax stars layer
  		updateEnemies();
  		move(); // update player space ship
  	}
@@ -175,6 +180,10 @@ function setupManifest() {
 	{
 		src: "images/missile.png",
 		id: "missile"
+	},
+	{
+		src: "images/stars2.png",
+		id: "stars2"
 	}
 	];
 }
@@ -205,6 +214,9 @@ function handleFileLoad(event) {
    		starsImage2 = new createjs.Bitmap(event.result);
    	} else if (event.item.id == "missile") {
    		missileImage = new createjs.Bitmap(event.result);
+   	} else if (event.item.id == "stars2") {
+   		starsImageLayer2 = new createjs.Bitmap(event.result);
+   		starsImageLayer2_2 = new createjs.Bitmap(event.result);
    	}
 }
 
@@ -299,6 +311,11 @@ function initGraphics() {
 	starsImage2.y = sidebarImage.getBounds().height;
 	stage.addChild(starsImage);
 	stage.addChild(starsImage2);
+	starsImageLayer2.x = sidebarImage.getBounds().width;
+	starsImageLayer2_2.x = sidebarImage.getBounds().width;
+	starsImageLayer2_2.y = sidebarImage.getBounds().height;
+	stage.addChild(starsImageLayer2);
+	stage.addChild(starsImageLayer2_2);
 
 	// explosion animation
 	var explosionSpriteData = {
@@ -512,6 +529,10 @@ function updateMissile() {
 		enemyHit(enemyHitBitmap);
 		missileFired = false;
 	}
+
+	if (missileImage.y < -missileImage.getBounds().height) { // missile off screen
+		missileFired = false;
+	}
 }
 
 /*
@@ -578,13 +599,27 @@ function centerEnemyLabels() {
  * Scrolls the stars down, and loops them.
  */
 function loopStarsBackground() {
- 	starsImage.y+=0.5;
-	starsImage2.y+0.5;
+ 	starsImage.y += SLOWER_STARS_SPEED;
+	starsImage2.y += SLOWER_STARS_SPEED;
 	if (starsImage.y > -5) {
 		starsImage2.y = starsImage.y - starsImage2.getBounds().height;
 	} 
 	if (starsImage2.y > -5) {
 		starsImage.y = starsImage2.y - starsImage.getBounds().height;
+	}
+}
+
+/*
+ * Loops a second star layer background at a different speed (makes it appear there is depth).
+ */
+function loopStarsBackgroundLayer2() {
+ 	starsImageLayer2.y += FASTER_STARS_SPEED;
+	starsImageLayer2_2.y += FASTER_STARS_SPEED;
+	if (starsImageLayer2.y > -5) {
+		starsImageLayer2_2.y = starsImageLayer2.y - starsImageLayer2_2.getBounds().height;
+	} 
+	if (starsImageLayer2_2.y > -5) {
+		starsImageLayer2.y = starsImageLayer2_2.y - starsImageLayer2.getBounds().height;
 	}
 }
 
@@ -702,13 +737,23 @@ function enemyHit(e) {
 	stage.removeChild(missileImage); // remove the missile from stage
 
 	// explode the ship that was hit
-	explosionAnimation.x = e.x;
+	explosionAnimation.x = e.x - 15;
 	explosionAnimation.y = e.y;
 	explosionAnimation.scaleX = 1.3;
 	explosionAnimation.scaleY = 1.3;
 	stage.addChild(explosionAnimation);
 	explosionAnimation.gotoAndPlay("explode");
 	createjs.Tween.get(e).to({alpha:0},500);
+
+	// determine which label to fade
+	for (var label of [enemyText1, enemyText2, enemyText3, enemyText4]) {
+		if (label.x < e.x+e.getBounds().width && label.x > e.x) {
+			createjs.Tween.get(label).to({alpha:0},500);
+			break;
+		}
+	}
+
+
 	setTimeout(function removeHitShip() {
 		e.y = STAGE_HEIGHT + 300;
 		stage.removeChild(e);
@@ -757,6 +802,11 @@ function explodeOtherShips(e) {
 				createjs.Tween.get(otherShip).to({alpha:0},500).call(setAllShipsVisible);
 			}
 		}
+
+		createjs.Tween.get(enemyText1).to({alpha:0},500).call(setAllShipsVisible);
+		createjs.Tween.get(enemyText2).to({alpha:0},500).call(setAllShipsVisible);
+		createjs.Tween.get(enemyText3).to({alpha:0},500).call(setAllShipsVisible);
+		createjs.Tween.get(enemyText4).to({alpha:0},500).call(setAllShipsVisible);
 	}, 500);
 
 	setTimeout(function removeOtherShips() {
@@ -775,4 +825,8 @@ function setAllShipsVisible() {
 	enemy2.alpha = 1;
 	enemy3.alpha = 1;
 	enemy4.alpha = 1;
+	enemyText1.alpha = 1;
+	enemyText2.alpha = 1;
+	enemyText3.alpha = 1;
+	enemyText4.alpha = 1;
 }

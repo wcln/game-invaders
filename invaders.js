@@ -13,21 +13,32 @@
 var EXPONENT_2 = "\u00B2";
 var SQUARE_ROOT = "\u221A";
 
-var questions = [	{question:SQUARE_ROOT+"64",answer:8,options:[2,3,1,8]},
-					{question:SQUARE_ROOT+"81",answer:9,options:[2,9,3,1]},
-					{question:SQUARE_ROOT+"25",answer:5,options:[2,5,3,1]},
-					{question:"9"+EXPONENT_2,answer:81,options:[81,2,3,1]},
-					{question:SQUARE_ROOT+"16",answer:4,options:[4,2,3,1]},
-					{question:SQUARE_ROOT+"9",answer:3,options:[2,3,1,3]},
-					{question:SQUARE_ROOT+"49",answer:7,options:[2,3,7,1]},
-					{question:"10"+EXPONENT_2,answer:100,options:[2,3,100,1]},
-					{question:"2"+EXPONENT_2,answer:4,options:[2,3,1,4]},
-					{question:"6"+EXPONENT_2,answer:36,options:[2,36,3,1]},
-					{question:"11"+EXPONENT_2,answer:121,options:[2,3,1,121]},
-					{question:SQUARE_ROOT+"36",answer:6,options:[6,2,3,1]},
-					{question:"5"+EXPONENT_2,answer:25,options:[2,25,3,1]},
-					{question:SQUARE_ROOT+"4",answer:2,options:[2,4,3,1]}
-				 ];
+var questions = [	{question:SQUARE_ROOT+"64",answer:8,options:[9,7,4,8]},
+					{question:SQUARE_ROOT+"81",answer:9,options:[3,9,8,7]},
+					{question:SQUARE_ROOT+"25",answer:5,options:[7,5,3,25]},
+					{question:"9"+EXPONENT_2,answer:81,options:[81,64,72,91]},
+					{question:SQUARE_ROOT+"16",answer:4,options:[4,2,3,8]},
+					{question:SQUARE_ROOT+"9",answer:3,options:[6,4,18,3]},
+					{question:SQUARE_ROOT+"49",answer:7,options:[9,8,7,6]},
+					{question:"10"+EXPONENT_2,answer:100,options:[1000,101,100,102]},
+					{question:"2"+EXPONENT_2,answer:4,options:[2,3,6,4]},
+					{question:"6"+EXPONENT_2,answer:36,options:[42,36,64,49]}, // 10 questions
+					{question:"11"+EXPONENT_2,answer:121,options:[110,111,120,121]},
+					{question:SQUARE_ROOT+"36",answer:6,options:[6,8,7,9]},
+					{question:"5"+EXPONENT_2,answer:25,options:[10,25,55,45]},
+					{question:SQUARE_ROOT+"4",answer:2,options:[2,4,8,3]},
+					{question:SQUARE_ROOT+"1",answer:1,options:[3,11,2,1]},
+					{question:"1"+EXPONENT_2,answer:1,options:[1,11,3,2]},
+					{question:"4"+EXPONENT_2,answer:16,options:[16,12,36,44]},
+					{question:"3"+EXPONENT_2,answer:9,options:[12,9,16,30]},
+					{question:SQUARE_ROOT+"100",answer:10,options:[11,10,9,15]},
+					{question:SQUARE_ROOT+"121",answer:11,options:[11,10,9,15]},// 20 questions
+					{question:SQUARE_ROOT+"144",answer:12,options:[11,13,12,15]},
+					{question:"5"+EXPONENT_2,answer:25,options:[10,25,1,30]},
+					{question:"7"+EXPONENT_2,answer:49,options:[4,50,49,7]},
+					{question:"12"+EXPONENT_2,answer:144,options:[120,122,144,136]},
+					{question:"13"+EXPONENT_2,answer:169,options:[169,170,168,133]}
+				];
 
 
 var FPS = 24;
@@ -41,7 +52,8 @@ var gameStarted = false;
 var questionCounter;
 var score;
 var ENEMY_SPEED = 2;
-var DEFAULT_ENEMY_SPEED = 2;
+var ENEMY_SPEED_LEVEL_2 = 2.5;
+var ENEMY_SPEED_LEVEL_3 = 3;
 var PLAYER_MOVE_SPEED = 6;
 var MISSILE_SPEED = 8;
 var ENEMY_SHIP_SPACING = 75;
@@ -56,6 +68,8 @@ var enemyText2;
 var enemyText3;
 var enemyText4;
 var alertText;
+var levelText;
+var gameOverScoreText;
 
 // bitmap images
 var playerImage;
@@ -70,6 +84,8 @@ var enemy2;
 var enemy3;
 var enemy4;
 var missileImage;
+var gameOverImage;
+var gameStartImage;
 
 // animations
 var explosionAnimation;
@@ -85,6 +101,7 @@ var KEYCODE_LEFT = 37,
 var leftArrow, rightArrow, upArrow, downArrow = false;
 
 var missileFired = false;
+var enemiesHitBottom = false;
 
 
 /*
@@ -111,7 +128,7 @@ function init() {
 	setupManifest(); // preloadJS
 	startPreload();
 
-	score = 100; // reset game score
+	score = 0; // reset game score
 	questionCounter = 0;
 
 	// keyboard handlers
@@ -130,7 +147,6 @@ function init() {
  		if (enemy1.y > STAGE_HEIGHT && enemy2.y > STAGE_HEIGHT && enemy3.y > STAGE_HEIGHT && enemy4.y > STAGE_HEIGHT) { // then spawn new enemies and switch the question
 
  			respawnEnemies();
-
  		}
 
  		if (missileFired) { // if a missile has been fired, update it
@@ -184,6 +200,22 @@ function setupManifest() {
 	{
 		src: "images/stars2.png",
 		id: "stars2"
+	},
+	{
+		src: "images/gameover.png",
+		id: "gameover"
+	},
+	{
+		src: "images/gamestart.png",
+		id: "gamestart"
+	},
+	{
+		src: "sounds/explosion.wav",
+		id: "explosionSound"
+	},
+	{
+		src: "sounds/missile.wav",
+		id: "missileSound"
 	}
 	];
 }
@@ -217,7 +249,11 @@ function handleFileLoad(event) {
    	} else if (event.item.id == "stars2") {
    		starsImageLayer2 = new createjs.Bitmap(event.result);
    		starsImageLayer2_2 = new createjs.Bitmap(event.result);
-   	}
+   	} else if (event.item.id == "gameover") {
+   		gameOverImage = new createjs.Bitmap(event.result);
+   	} else if (event.item.id == "gamestart") {
+   		gameStartImage = new createjs.Bitmap(event.result);
+   	} 
 }
 
 function loadError(evt) {
@@ -240,7 +276,8 @@ function loadComplete(event) {
     startText = new createjs.Text("Click To Start", "50px 'Press Start 2P'", "white");
     startText.x = STAGE_WIDTH/2 - startText.getMeasuredWidth()/2;
     startText.y = STAGE_HEIGHT/2 - startText.getMeasuredHeight()/2;
-    stage.addChild(startText);
+   // stage.addChild(startText);
+    stage.addChild(gameStartImage);
     stage.update();
     stage.on("stagemousedown", startGame, null, false);
 }
@@ -257,10 +294,12 @@ function startGame(event) {
 	//ticker calls update function, set the FPS
 	createjs.Ticker.setFPS(FPS);
 	createjs.Ticker.addEventListener("tick", tick); // call tick function
-	createjs.Tween.get(startText)
-		.to({x:-500},500) // remove start text from visible canvas
+
+
+	createjs.Tween.get(gameStartImage)
+		.to({x:-1000},500) // remove start text from visible canvas
 		.call(initGraphics);
-	stage.removeChild(progressText);
+	//stage.removeChild(gameStartImage);
 
 }
 
@@ -269,10 +308,26 @@ function startGame(event) {
  */
 function endGame() {
 	gameStarted = false;
-	var playAgainText = new createjs.Text("Click to play again", "40px 'Press Start 2P'", "white");
-	playAgainText.x = STAGE_WIDTH/2 - playAgainText.getMeasuredWidth()/2;
-    playAgainText.y = STAGE_HEIGHT/2 - playAgainText.getMeasuredHeight()/2 + 70;
-    stage.addChild(playAgainText);
+
+	stage.addChild(gameOverImage);
+	gameOverImage.scaleX = 0.1;
+	gameOverImage.scaleY = 0.1;
+	gameOverImage.regX = gameOverImage.getBounds().width/2;
+	gameOverImage.regY = gameOverImage.getBounds().height/2;
+	gameOverImage.x = sidebarImage.getBounds().width + (STAGE_WIDTH - sidebarImage.getBounds().width)/2;
+	gameOverImage.y = STAGE_HEIGHT/2;
+	gameOverScoreText = new createjs.Text("Score:" + score, "25px 'Press Start 2P'", "blue");
+	gameOverScoreText.scaleX = 0.1;
+	gameOverScoreText.scaleY = 0.1;
+	gameOverScoreText.regX = gameOverScoreText.getMeasuredWidth()/2;
+	gameOverScoreText.regY = gameOverScoreText.getMeasuredHeight()/2;
+	gameOverScoreText.x = gameOverImage.x;
+	gameOverScoreText.y = STAGE_HEIGHT/2 - 8;
+	stage.addChild(gameOverScoreText);
+
+	createjs.Tween.get(gameOverImage).to({scaleX:1,scaleY:1},500);
+	createjs.Tween.get(gameOverScoreText).to({scaleX:1,scaleY:1},500);
+
 	stage.update();
 	stage.on("stagemousedown", function() {
 		playSound("click");
@@ -305,6 +360,12 @@ function initGraphics() {
 	alertText.x = playerImage.x;
 	alertText.y = playerImage.y - alertText.getMeasuredHeight() - 5;
 
+	// level text
+	levelText = new createjs.Text("Level 1", "40px 'Press Start 2P'", "white");
+	levelText.x = sidebarImage.getBounds().width + (STAGE_WIDTH - sidebarImage.getBounds().width)/2 - levelText.getMeasuredWidth()/2;
+	levelText.y = 0;
+
+
 	// scrolling stars
 	starsImage.x = sidebarImage.getBounds().width;
 	starsImage2.x = sidebarImage.getBounds().width;
@@ -330,7 +391,10 @@ function initGraphics() {
 	setupPlayer();
 	setupEnemies();
 
-	gameStarted = true; // once graphics are loaded, game is started
+	setTimeout(function() {
+		gameStarted = true; // once graphics are loaded start the game
+	}, 1000); // delay so it doesnt start too quickly
+
 }
 
 /*
@@ -387,6 +451,7 @@ function setupEnemies() {
 	enemy4.name = enemyText4.text;
 	updateQuestionText(questions[0].question);
 	centerEnemyLabels();
+	levelAnimation(1);
 }
 
 /*
@@ -394,7 +459,6 @@ function setupEnemies() {
  */
 function respawnEnemies() {
 	setAllShipsVisible();
-	ENEMY_SPEED = DEFAULT_ENEMY_SPEED;
 
 	var temp = 0;
 	for (var e of [enemy1, enemy2, enemy3, enemy4]) {
@@ -408,6 +472,12 @@ function respawnEnemies() {
 		endGame(); // out of questions
 
 	} else { // there are still more questions
+
+		if (questionCounter == 10) {
+			levelAnimation(2);
+		} else if (questionCounter == 15) {
+			levelAnimation(3);
+		}
 
 		updateQuestionText(questions[questionCounter].question);
 
@@ -427,6 +497,7 @@ function respawnEnemies() {
 		stage.addChild(enemy3);
 		stage.addChild(enemy4);
 	}
+	enemiesHitBottom = false;
 }
 
  /*
@@ -574,6 +645,14 @@ function updateScore(amount) {
 	score += amount;
 	scoreText.text = "Score:" + score;
 	scoreText.x = sidebarImage.getBounds().width/2 - scoreText.getMeasuredWidth()/2;
+
+	if (amount > 0) {
+		alertText.color = "green";
+		sendAlertMessage("+" + amount);
+	} else {
+		alertText.color = "red";
+		sendAlertMessage(amount);
+	}
 }
 
 /*
@@ -632,6 +711,11 @@ function updateEnemies() {
 	for (var e of [enemy1, enemy2, enemy3, enemy4]) {
 		if (e.y < STAGE_HEIGHT + 200) {
 			e.y += ENEMY_SPEED;
+		}
+		if (e.y + e.getBounds().width > playerImage.y && enemiesHitBottom == false && e.name == questions[questionCounter].answer) { // enemies are at the bottom
+			explodeAllShips();
+			updateScore(-50);
+			enemiesHitBottom = true; // the enemies have hit the bottom of the screen... dont check this again for this wave of enemies
 		}
 	}
 
@@ -716,7 +800,7 @@ function move() {
  */
 function shoot() {
 
-	if (!missileFired) { // if the missile isnt already firing
+	if (!missileFired && gameStarted) { // if the missile isnt already firing
 		// initial missile position
 		missileImage.alpha = 0;
 		missileImage.x = playerImage.x + playerImage.getBounds().width/2 - missileImage.getBounds().width/2;
@@ -724,7 +808,7 @@ function shoot() {
 		stage.addChild(missileImage);
 		createjs.Tween.get(missileImage).to({alpha:1},300);
 		missileFired = true;
-
+		playSound("missileSound");
 	}
 }
 
@@ -744,6 +828,7 @@ function enemyHit(e) {
 	stage.addChild(explosionAnimation);
 	explosionAnimation.gotoAndPlay("explode");
 	createjs.Tween.get(e).to({alpha:0},500);
+	playSound("explosionSound");
 
 	// determine which label to fade
 	for (var label of [enemyText1, enemyText2, enemyText3, enemyText4]) {
@@ -765,7 +850,7 @@ function enemyHit(e) {
 		explodeOtherShips(e);
 
 
-		if (e.y < STAGE_HEIGHT/2) { // if leader is hit in first half of screen +100pts
+		if (e.y + e.getBounds().height < STAGE_HEIGHT/2) { // if leader is hit in first half of screen +100pts
 
 			updateScore(100);
 
@@ -785,6 +870,38 @@ function enemyHit(e) {
 }
 
 /*
+ * Explodes all enemy ships
+ */
+function explodeAllShips() {
+	setTimeout(function explodeOthers() {
+		// explode all ships
+		for (var otherShip of [enemy1, enemy2, enemy3, enemy4]) {
+			var temp = Object.create(explosionAnimation);
+			temp.x = otherShip.x;
+			temp.y = otherShip.y;
+			temp.scaleX = 1;
+			temp.scaleY = 1;
+			stage.addChild(temp);
+			temp.gotoAndPlay("explode");
+			playSound("explosionSound");
+			createjs.Tween.get(otherShip).to({alpha:0},500).call(setAllShipsVisible);
+		}
+
+		createjs.Tween.get(enemyText1).to({alpha:0},500).call(setAllShipsVisible);
+		createjs.Tween.get(enemyText2).to({alpha:0},500).call(setAllShipsVisible);
+		createjs.Tween.get(enemyText3).to({alpha:0},500).call(setAllShipsVisible);
+		createjs.Tween.get(enemyText4).to({alpha:0},500).call(setAllShipsVisible);
+	}, 500);
+
+	setTimeout(function removeOtherShips() {
+		enemy1.y = STAGE_HEIGHT + 300;
+		enemy2.y = STAGE_HEIGHT + 300;
+		enemy3.y = STAGE_HEIGHT + 300;
+		enemy4.y = STAGE_HEIGHT + 300;
+	}, 1000);
+}
+
+/*
  * Explodes all enemy ships except one that was already exploded.
  */
 function explodeOtherShips(e) {
@@ -799,6 +916,7 @@ function explodeOtherShips(e) {
 				temp.scaleY = 1;
 				stage.addChild(temp);
 				temp.gotoAndPlay("explode");
+				playSound("explosionSound");
 				createjs.Tween.get(otherShip).to({alpha:0},500).call(setAllShipsVisible);
 			}
 		}
@@ -829,4 +947,28 @@ function setAllShipsVisible() {
 	enemyText2.alpha = 1;
 	enemyText3.alpha = 1;
 	enemyText4.alpha = 1;
+}
+
+/*
+ * Shows the next level screen
+ * @param level number
+ */
+function levelAnimation(number) {
+
+	if (number == 2) {
+		ENEMY_SPEED = ENEMY_SPEED_LEVEL_2;
+	} else if (number == 3) {
+		ENEMY_SPEED = ENEMY_SPEED_LEVEL_3;
+	}
+
+	levelText.text = "Level " + number;
+	levelText.x = sidebarImage.getBounds().width + (STAGE_WIDTH - sidebarImage.getBounds().width)/2 - levelText.getMeasuredWidth()/2;
+	levelText.y = -levelText.getMeasuredHeight();
+	stage.addChild(levelText);
+
+	createjs.Tween.get(levelText)
+		.to({y:1000},4000)
+		.call(function Johnny() {
+			stage.removeChild(levelText);
+		});
 }

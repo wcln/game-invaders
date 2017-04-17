@@ -86,6 +86,7 @@ var enemy4;
 var missileImage;
 var gameOverImage;
 var gameStartImage;
+var squareRootImage;
 
 // animations
 var explosionAnimation;
@@ -216,6 +217,10 @@ function setupManifest() {
 	{
 		src: "sounds/missile.wav",
 		id: "missileSound"
+	},
+	{
+		src: "images/square_root.png",
+		id: "squareroot"
 	}
 	];
 }
@@ -253,7 +258,9 @@ function handleFileLoad(event) {
    		gameOverImage = new createjs.Bitmap(event.result);
    	} else if (event.item.id == "gamestart") {
    		gameStartImage = new createjs.Bitmap(event.result);
-   	} 
+   	} else if (event.item.id == "squareroot") {
+   		squareRootImage = new createjs.Bitmap(event.result);
+   	}
 }
 
 function loadError(evt) {
@@ -620,7 +627,7 @@ function malfunction() {
 * Plays a sound if the game is not muted.
 */
 function playSound(id) {
-	if (!mute) {
+	if (mute == false) {
 		createjs.Sound.play(id);
 	}
 }
@@ -659,8 +666,23 @@ function updateScore(amount) {
  * Updates the question text and maintains center position in sidebar.
  */
 function updateQuestionText(text) {
+
+	stage.removeChild(squareRootImage);
+
+	isSquareRoot = false;
+	if (text.includes(SQUARE_ROOT)) { // use the square root image instead so that the bar is above the number
+		text = text.replace(SQUARE_ROOT, "");
+		isSquareRoot = true;
+	}
+
 	questionText.text = text;
 	questionText.x = sidebarImage.getBounds().width/2 - questionText.getMeasuredWidth()/2;
+
+	if (isSquareRoot) { // display the image centered over text
+		squareRootImage.x = questionText.x - 25;
+		squareRootImage.y = questionText.y - 5;
+		stage.addChild(squareRootImage);
+	}
 }
 
 /*
@@ -730,16 +752,17 @@ function updateEnemies() {
  * Toggles mute variable. Called from HTML button.
  */
 function toggleMute() {
-	mute = !mute;
 
-	if (mute) {
+	if (mute == true) {
+		mute = false;
+	} else {
+		mute = true;
+	}
+
+	if (mute == true) {
 		document.getElementById("mute").firstElementChild.setAttribute("src", "images/mute.png");
-		ambianceSound.stop();
-		ambianceSound = null;
 	} else {
 		document.getElementById("mute").firstElementChild.setAttribute("src", "images/unmute.png");
-		ambianceSound = createjs.Sound.play("ambiance", {loop:-1});
-		ambianceSound.volume = 0.8;
 	}
 }
 
@@ -764,7 +787,7 @@ function keyDownHandler(e) {
 	switch (e.keyCode) {
 		case KEYCODE_LEFT: leftArrow = true; break;
 		case KEYCODE_RIGHT: rightArrow = true; break;
-		case KEYCODE_SPACE: shoot(); break;
+		case KEYCODE_SPACE: e.preventDefault(); shoot(); break;
 	}
 }
 
@@ -775,7 +798,7 @@ function keyUpHandler(e) {
 	switch (e.keyCode) {
 		case KEYCODE_LEFT: leftArrow = false; break;
 		case KEYCODE_RIGHT: rightArrow = false; break;
-		case KEYCODE_SPACE: /* do nothing */ break;
+		case KEYCODE_SPACE: e.preventDefault(); break;
 	}
 }
 

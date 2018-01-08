@@ -13,34 +13,6 @@
 var EXPONENT_2 = "\u00B2";
 var SQUARE_ROOT = "\u221A";
 
-// var questions = [	{question:SQUARE_ROOT+"64",answer:8,options:[9,7,4,8]},
-// 					{question:SQUARE_ROOT+"81",answer:9,options:[3,9,8,7]},
-// 					{question:SQUARE_ROOT+"25",answer:5,options:[7,5,3,25]},
-// 					{question:"9"+EXPONENT_2,answer:81,options:[81,64,72,91]},
-// 					{question:SQUARE_ROOT+"16",answer:4,options:[4,2,3,8]},
-// 					{question:SQUARE_ROOT+"9",answer:3,options:[6,4,18,3]},
-// 					{question:SQUARE_ROOT+"49",answer:7,options:[9,8,7,6]},
-// 					{question:"10"+EXPONENT_2,answer:100,options:[1000,101,100,102]},
-// 					{question:"2"+EXPONENT_2,answer:4,options:[2,3,6,4]},
-// 					{question:"6"+EXPONENT_2,answer:36,options:[42,36,64,49]}, // 10 questions
-// 					{question:"11"+EXPONENT_2,answer:121,options:[110,111,120,121]},
-// 					{question:SQUARE_ROOT+"36",answer:6,options:[6,8,7,9]},
-// 					{question:"5"+EXPONENT_2,answer:25,options:[10,25,55,45]},
-// 					{question:SQUARE_ROOT+"4",answer:2,options:[2,4,8,3]},
-// 					{question:SQUARE_ROOT+"1",answer:1,options:[3,11,2,1]},
-// 					{question:"1"+EXPONENT_2,answer:1,options:[1,11,3,2]},
-// 					{question:"4"+EXPONENT_2,answer:16,options:[16,12,36,44]},
-// 					{question:"3"+EXPONENT_2,answer:9,options:[12,9,16,30]},
-// 					{question:SQUARE_ROOT+"100",answer:10,options:[11,10,9,15]},
-// 					{question:SQUARE_ROOT+"121",answer:11,options:[11,10,9,15]},// 20 questions
-// 					{question:SQUARE_ROOT+"144",answer:12,options:[11,13,12,15]},
-// 					{question:"5"+EXPONENT_2,answer:25,options:[10,25,1,30]},
-// 					{question:"7"+EXPONENT_2,answer:49,options:[4,50,49,7]},
-// 					{question:"12"+EXPONENT_2,answer:144,options:[120,122,144,136]},
-// 					{question:"13"+EXPONENT_2,answer:169,options:[169,170,168,133]}
-// 				];
-
-
 var FPS = 24;
 var mute = false;
 
@@ -488,7 +460,7 @@ function respawnEnemies() {
 	} else { // there are still more questions
 
 		// next level
-		if (questionCounter % questionsPerLevel == 0) {
+		if (questionCounter % numquestions == 0) {
 			levelCounter++;
 			levelAnimation(levelCounter);
 		}

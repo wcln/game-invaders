@@ -60,6 +60,7 @@ var missileImage;
 var gameOverImage;
 var gameStartImage;
 var squareRootImage;
+var muteImage, unmuteImage;
 
 // animations
 var explosionAnimation;
@@ -196,7 +197,15 @@ function setupManifest() {
 	{
 		src: "images/square_root.png",
 		id: "squareroot"
-	}
+	},
+  {
+    src: "images/mute.png",
+    id: "mute"
+  },
+  {
+    src: "images/unmute.png",
+    id: "unmute"
+  }
 	];
 }
 
@@ -235,7 +244,11 @@ function handleFileLoad(event) {
    		gameStartImage = new createjs.Bitmap(event.result);
    	} else if (event.item.id == "squareroot") {
    		squareRootImage = new createjs.Bitmap(event.result);
-   	}
+   	} else if (event.item.id == "mute") {
+      muteImage = new createjs.Bitmap(event.result);
+    } else if (event.item.id == "unmute") {
+      unmuteImage = new createjs.Bitmap(event.result);
+    }
 }
 
 function loadError(evt) {
@@ -377,10 +390,32 @@ function initGraphics() {
 	setupPlayer();
 	setupEnemies();
 
+  initMuteUnMuteButtons();
+
 	setTimeout(function() {
 		gameStarted = true; // once graphics are loaded start the game
 	}, 1000); // delay so it doesnt start too quickly
 
+}
+
+/*
+ * Adds the mute and unmute buttons to the stage and defines listeners
+ */
+function initMuteUnMuteButtons() {
+	var hitArea = new createjs.Shape();
+	hitArea.graphics.beginFill("#000").drawRect(0, 0, muteImage.image.width, muteImage.image.height);
+	muteImage.hitArea = unmuteImage.hitArea = hitArea;
+
+	muteImage.x = unmuteImage.x = sidebarImage.image.width/2 - muteImage.image.width/2;
+	muteImage.y = unmuteImage.y = 540;
+
+	muteImage.cursor = "pointer";
+	unmuteImage.cursor = "pointer";
+
+	muteImage.on("click", toggleMute);
+	unmuteImage.on("click", toggleMute);
+
+	stage.addChild(unmuteImage);
 }
 
 /*
@@ -739,9 +774,11 @@ function toggleMute() {
 	}
 
 	if (mute == true) {
-		document.getElementById("mute").firstElementChild.setAttribute("src", "images/mute.png");
+		stage.addChild(muteImage);
+    stage.removeChild(unmuteImage);
 	} else {
-		document.getElementById("mute").firstElementChild.setAttribute("src", "images/unmute.png");
+    stage.addChild(unmuteImage);
+    stage.removeChild(muteImage);
 	}
 }
 

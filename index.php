@@ -58,6 +58,5 @@
 
 	</canvas>
 
-	<button id="mute" onClick="toggleMute()"><img style="width:16px; height:16px;" src="images/unmute.png"></img></button>
 </body>
 </html>

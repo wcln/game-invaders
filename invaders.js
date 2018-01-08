@@ -13,32 +13,32 @@
 var EXPONENT_2 = "\u00B2";
 var SQUARE_ROOT = "\u221A";
 
-var questions = [	{question:SQUARE_ROOT+"64",answer:8,options:[9,7,4,8]},
-					{question:SQUARE_ROOT+"81",answer:9,options:[3,9,8,7]},
-					{question:SQUARE_ROOT+"25",answer:5,options:[7,5,3,25]},
-					{question:"9"+EXPONENT_2,answer:81,options:[81,64,72,91]},
-					{question:SQUARE_ROOT+"16",answer:4,options:[4,2,3,8]},
-					{question:SQUARE_ROOT+"9",answer:3,options:[6,4,18,3]},
-					{question:SQUARE_ROOT+"49",answer:7,options:[9,8,7,6]},
-					{question:"10"+EXPONENT_2,answer:100,options:[1000,101,100,102]},
-					{question:"2"+EXPONENT_2,answer:4,options:[2,3,6,4]},
-					{question:"6"+EXPONENT_2,answer:36,options:[42,36,64,49]}, // 10 questions
-					{question:"11"+EXPONENT_2,answer:121,options:[110,111,120,121]},
-					{question:SQUARE_ROOT+"36",answer:6,options:[6,8,7,9]},
-					{question:"5"+EXPONENT_2,answer:25,options:[10,25,55,45]},
-					{question:SQUARE_ROOT+"4",answer:2,options:[2,4,8,3]},
-					{question:SQUARE_ROOT+"1",answer:1,options:[3,11,2,1]},
-					{question:"1"+EXPONENT_2,answer:1,options:[1,11,3,2]},
-					{question:"4"+EXPONENT_2,answer:16,options:[16,12,36,44]},
-					{question:"3"+EXPONENT_2,answer:9,options:[12,9,16,30]},
-					{question:SQUARE_ROOT+"100",answer:10,options:[11,10,9,15]},
-					{question:SQUARE_ROOT+"121",answer:11,options:[11,10,9,15]},// 20 questions
-					{question:SQUARE_ROOT+"144",answer:12,options:[11,13,12,15]},
-					{question:"5"+EXPONENT_2,answer:25,options:[10,25,1,30]},
-					{question:"7"+EXPONENT_2,answer:49,options:[4,50,49,7]},
-					{question:"12"+EXPONENT_2,answer:144,options:[120,122,144,136]},
-					{question:"13"+EXPONENT_2,answer:169,options:[169,170,168,133]}
-				];
+// var questions = [	{question:SQUARE_ROOT+"64",answer:8,options:[9,7,4,8]},
+// 					{question:SQUARE_ROOT+"81",answer:9,options:[3,9,8,7]},
+// 					{question:SQUARE_ROOT+"25",answer:5,options:[7,5,3,25]},
+// 					{question:"9"+EXPONENT_2,answer:81,options:[81,64,72,91]},
+// 					{question:SQUARE_ROOT+"16",answer:4,options:[4,2,3,8]},
+// 					{question:SQUARE_ROOT+"9",answer:3,options:[6,4,18,3]},
+// 					{question:SQUARE_ROOT+"49",answer:7,options:[9,8,7,6]},
+// 					{question:"10"+EXPONENT_2,answer:100,options:[1000,101,100,102]},
+// 					{question:"2"+EXPONENT_2,answer:4,options:[2,3,6,4]},
+// 					{question:"6"+EXPONENT_2,answer:36,options:[42,36,64,49]}, // 10 questions
+// 					{question:"11"+EXPONENT_2,answer:121,options:[110,111,120,121]},
+// 					{question:SQUARE_ROOT+"36",answer:6,options:[6,8,7,9]},
+// 					{question:"5"+EXPONENT_2,answer:25,options:[10,25,55,45]},
+// 					{question:SQUARE_ROOT+"4",answer:2,options:[2,4,8,3]},
+// 					{question:SQUARE_ROOT+"1",answer:1,options:[3,11,2,1]},
+// 					{question:"1"+EXPONENT_2,answer:1,options:[1,11,3,2]},
+// 					{question:"4"+EXPONENT_2,answer:16,options:[16,12,36,44]},
+// 					{question:"3"+EXPONENT_2,answer:9,options:[12,9,16,30]},
+// 					{question:SQUARE_ROOT+"100",answer:10,options:[11,10,9,15]},
+// 					{question:SQUARE_ROOT+"121",answer:11,options:[11,10,9,15]},// 20 questions
+// 					{question:SQUARE_ROOT+"144",answer:12,options:[11,13,12,15]},
+// 					{question:"5"+EXPONENT_2,answer:25,options:[10,25,1,30]},
+// 					{question:"7"+EXPONENT_2,answer:49,options:[4,50,49,7]},
+// 					{question:"12"+EXPONENT_2,answer:144,options:[120,122,144,136]},
+// 					{question:"13"+EXPONENT_2,answer:169,options:[169,170,168,133]}
+// 				];
 
 
 var FPS = 24;
@@ -70,6 +70,7 @@ var enemyText4;
 var alertText;
 var levelText;
 var gameOverScoreText;
+var titleText;
 
 // bitmap images
 var playerImage;
@@ -103,6 +104,7 @@ var leftArrow, rightArrow, upArrow, downArrow = false;
 
 var missileFired = false;
 var enemiesHitBottom = false;
+var levelCounter = 1;
 
 
 /*
@@ -136,7 +138,8 @@ function init() {
 	window.onkeyup = keyUpHandler;
 	window.onkeydown = keyDownHandler;
 
-	stage.update(); 
+	stage.update();
+
 }
 
 /*
@@ -227,7 +230,7 @@ function setupManifest() {
 
 function startPreload() {
 	preload = new createjs.LoadQueue(true);
-    preload.installPlugin(createjs.Sound);          
+    preload.installPlugin(createjs.Sound);
     preload.on("fileload", handleFileLoad);
     preload.on("progress", handleFileProgress);
     preload.on("complete", loadComplete);
@@ -280,11 +283,14 @@ function loadComplete(event) {
     console.log("Finished Loading Assets");
 
     // display start screen
-    startText = new createjs.Text("Click To Start", "50px 'Press Start 2P'", "white");
-    startText.x = STAGE_WIDTH/2 - startText.getMeasuredWidth()/2;
-    startText.y = STAGE_HEIGHT/2 - startText.getMeasuredHeight()/2;
-   // stage.addChild(startText);
     stage.addChild(gameStartImage);
+
+		// add title text
+		titleText = new createjs.Text(gametitle, "36px 'Press Start 2P'", "#0c0cff");
+		titleText.x = STAGE_WIDTH/2 - titleText.getMeasuredWidth()/2;
+		titleText.y = 80;
+		stage.addChild(titleText);
+
     stage.update();
     stage.on("stagemousedown", startGame, null, false);
 }
@@ -307,6 +313,7 @@ function startGame(event) {
 		.to({x:-1000},500) // remove start text from visible canvas
 		.call(initGraphics);
 	//stage.removeChild(gameStartImage);
+	stage.removeChild(titleText);
 
 }
 
@@ -409,7 +416,7 @@ function initGraphics() {
  */
 function setupEnemies() {
  	enemy1 = Object.create(enemyImage);
-	enemy2 = Object.create(enemyImage); 
+	enemy2 = Object.create(enemyImage);
 	enemy3 = Object.create(enemyImage);
 	enemy4 = Object.create(enemyImage);
 
@@ -451,14 +458,14 @@ function setupEnemies() {
 	enemyText1.text = questions[0].options[0];
 	enemyText2.text = questions[0].options[1];
 	enemyText3.text = questions[0].options[2];
-	enemyText4.text = questions[0].answer;
+	enemyText4.text = questions[0].options[3];
 	enemy1.name = enemyText1.text;
 	enemy2.name = enemyText2.text;
 	enemy3.name = enemyText3.text;
 	enemy4.name = enemyText4.text;
 	updateQuestionText(questions[0].question);
 	centerEnemyLabels();
-	levelAnimation(1);
+	levelAnimation(levelCounter);
 }
 
 /*
@@ -480,10 +487,10 @@ function respawnEnemies() {
 
 	} else { // there are still more questions
 
-		if (questionCounter == 10) {
-			levelAnimation(2);
-		} else if (questionCounter == 15) {
-			levelAnimation(3);
+		// next level
+		if (questionCounter % questionsPerLevel == 0) {
+			levelCounter++;
+			levelAnimation(levelCounter);
 		}
 
 		updateQuestionText(questions[questionCounter].question);
@@ -696,7 +703,7 @@ function centerEnemyLabels() {
 }
 
 /*
- * Called by update function. 
+ * Called by update function.
  * Scrolls the stars down, and loops them.
  */
 function loopStarsBackground() {
@@ -704,7 +711,7 @@ function loopStarsBackground() {
 	starsImage2.y += SLOWER_STARS_SPEED;
 	if (starsImage.y > -5) {
 		starsImage2.y = starsImage.y - starsImage2.getBounds().height;
-	} 
+	}
 	if (starsImage2.y > -5) {
 		starsImage.y = starsImage2.y - starsImage.getBounds().height;
 	}
@@ -718,7 +725,7 @@ function loopStarsBackgroundLayer2() {
 	starsImageLayer2_2.y += FASTER_STARS_SPEED;
 	if (starsImageLayer2.y > -5) {
 		starsImageLayer2_2.y = starsImageLayer2.y - starsImageLayer2_2.getBounds().height;
-	} 
+	}
 	if (starsImageLayer2_2.y > -5) {
 		starsImageLayer2.y = starsImageLayer2_2.y - starsImageLayer2.getBounds().height;
 	}

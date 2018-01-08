@@ -15,6 +15,16 @@
 
 	<script>
 
+	// ensure keyboard commands are received by focusing the iframe (this will not work if game is embedded on another domain)
+	function setFocusIframe() {
+		var iframe = parent.document.getElementsByTagName("iframe")[0];
+		iframe.contentWindow.focus();
+	}
+
+	$(document).ready(function(){
+		setFocusIframe();
+	});
+
 		var questions = [];
 		var numlevels;
 		var numquestions;

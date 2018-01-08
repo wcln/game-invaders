@@ -458,7 +458,7 @@ function setupEnemies() {
 	enemyText1.text = questions[0].options[0];
 	enemyText2.text = questions[0].options[1];
 	enemyText3.text = questions[0].options[2];
-	enemyText4.text = questions[0].answer;
+	enemyText4.text = questions[0].options[3];
 	enemy1.name = enemyText1.text;
 	enemy2.name = enemyText2.text;
 	enemy3.name = enemyText3.text;

@@ -1,7 +1,7 @@
 /**
- * BCLearningNetwork.com
+ * wcln.ca
  * Perfect Squares Invaders
- * @author Colin Bernard (colinjbernard@hotmail.com)
+ * @author Colin Perepelken (colin@perepelken.ca)
  * March 2017
  */
 

@@ -8,8 +8,8 @@
 	<link rel="stylesheet" type="text/css" href="style/style.css"/>
 	<link rel="stylesheet" type="text/css" href="style/press_start_url.css"/>
 	<link rel="shortcut icon" href="images/favicon.ico"/>
-	<script src="https://bclearningnetwork.com/lib/jquery/jquery-3.2.1.min.js"></script><!-- CreateJS library hosted on BCLN server -->
-	<script src="https://bclearningnetwork.com/lib/createjs/createjs-2015.11.26.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
 	<script src="helper.js"></script>
 	<script src="lib/ndgmr.Collision.js"></script> <!-- https://github.com/olsn/Collision-Detection-for-EaselJS -->
 

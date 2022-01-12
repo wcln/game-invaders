@@ -1,2 +1,2 @@
-# bcln-game-invaders
-BCLN HTML5 Educational Game
+# Invaders Game
+Example: https://wcln.ca/local/lor/index.php/resources/view/49
